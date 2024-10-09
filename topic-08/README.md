@@ -1,7 +1,5 @@
 # Subtaks for topic 08. SQL DDL
 
-# Subtaks for topic 08. SQL DDL
-
 Create Schema:
 
 ```CREATE DATABASE travel_agency;```
