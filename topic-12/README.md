@@ -1,1 +1,1 @@
-# Subtaks for topic 11. Functions and Stored Procedures
+# Subtaks for topic 12. DB Administration
