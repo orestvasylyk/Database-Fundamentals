@@ -1,118 +1,115 @@
-# Subtaks for topic 08. SQL DDL
+-- Countries Table (To store country information)
+CREATE TABLE Countries (
+    countryid SERIAL PRIMARY KEY,
+    countryname VARCHAR(100) NOT NULL
+);
 
-Table "Countries" {
-  "countryid" SERIAL [pk, increment]
-  "countryname" VARCHAR(100) [not null]
-}
+-- Regions Table (To store region information, linked to Countries)
+CREATE TABLE Regions (
+    regionid SERIAL PRIMARY KEY,
+    regionname VARCHAR(100) NOT NULL,
+    countryid INT,
+    FOREIGN KEY (countryid) REFERENCES Countries(countryid)
+);
 
-Table "Regions" {
-  "regionid" SERIAL [pk, increment]
-  "regionname" VARCHAR(100) [not null]
-  "countryid" INT
-}
+-- Clients Table (Must be created after Countries and Regions)
+CREATE TABLE Clients (
+    clientid SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    numberofpeople INT NOT NULL,
+    passportdata VARCHAR(50) NOT NULL,
+    phone VARCHAR(15),     email VARCHAR(100) NOT NULL,
+    countryid INT,        -- Foreign key to Countries table
+    regionid INT,         -- Foreign key to Regions table
+    FOREIGN KEY (countryid) REFERENCES Countries(countryid),
+    FOREIGN KEY (regionid) REFERENCES Regions(regionid)
+);
 
-Table "Clients" {
-  "clientid" SERIAL [pk, increment]
-  "name" VARCHAR(100) [not null]
-  "numberofpeople" INT [not null]
-  "passportdata" VARCHAR(50) [not null]
-  "phone" VARCHAR(15)
-  "email" VARCHAR [not null]
-  "countryid" INT
-  "regionid" INT
-}
+-- Agents Table (Needed for the Orders and InsuranceContracts tables)
+CREATE TABLE Agents (
+    agentid SERIAL PRIMARY KEY,
+    fullname VARCHAR(100) NOT NULL,
+    commissionrate DECIMAL(5, 2) NOT NULL
+);
 
-Table "Agents" {
-  "agentid" SERIAL [pk, increment]
-  "fullname" VARCHAR(100) [not null]
-  "commissionrate" DECIMAL(5,2) [not null]
-}
+-- Centralized Orders Table
+CREATE TABLE Orders (
+    orderid SERIAL PRIMARY KEY,
+    clientid INT,
+    orderdate DATE NOT NULL,
+    totalamount DECIMAL(10, 2),
+    orderstatus VARCHAR(50),
+    FOREIGN KEY (clientid) REFERENCES Clients(clientid)
+);
 
-Table "Orders" {
-  "orderid" SERIAL [pk, increment]
-  "clientid" INT
-  "orderdate" DATE [not null]
-  "totalamount" DECIMAL(10,2)
-  "orderstatus" VARCHAR(50)
-}
+-- Orderlines Table
+CREATE TABLE Orderlines (
+    orderlineid SERIAL PRIMARY KEY,
+    orderid INT,
+    itemtype VARCHAR(50),  -- room, car, insurance
+    quantity INT,
+    unitprice DECIMAL(10, 2),
+    subtotal DECIMAL(10, 2),
+    FOREIGN KEY (orderid) REFERENCES Orders(orderid)
+);
 
-Table "Orderlines" {
-  "orderlineid" SERIAL [pk, increment]
-  "orderid" INT
-  "itemtype" VARCHAR(50)
-  "quantity" INT
-  "unitprice" DECIMAL(10,2)
-  "subtotal" DECIMAL(10,2)
-}
+-- Rooms Table
+CREATE TABLE Rooms (
+    roomnumber INT PRIMARY KEY,
+    numberofbeds INT,
+    roomtype VARCHAR(50),
+    costperday DECIMAL(10, 2)
+);
 
-Table "Rooms" {
-  "roomnumber" INT [pk]
-  "numberofbeds" INT
-  "roomtype" VARCHAR(50)
-  "costperday" DECIMAL(10,2)
-}
+-- CarModels Table (Needed before Cars)
+CREATE TABLE CarModels (
+    carmodelid SERIAL PRIMARY KEY,
+    manufacturer VARCHAR(50),
+    brand VARCHAR(50),
+    cartype VARCHAR(50),
+    costperday DECIMAL(10, 2)
+);
 
-Table "CarModels" {
-  "carmodelid" SERIAL [pk, increment]
-  "manufacturer" VARCHAR(50)
-  "brand" VARCHAR(50)
-  "cartype" VARCHAR(50)
-  "costperday" DECIMAL(10,2)
-}
+-- Cars Table
+CREATE TABLE Cars (
+    carnumber INT PRIMARY KEY,
+    carmodelid INT,
+    color VARCHAR(50),
+    FOREIGN KEY (carmodelid) REFERENCES CarModels(carmodelid)  -- Connect to CarModels
+);
 
-Table "Cars" {
-  "carnumber" INT [pk]
-  "carmodelid" INT
-  "color" VARCHAR(50)
-}
+-- Bookings Table
+CREATE TABLE Bookings (
+    bookingid SERIAL PRIMARY KEY,
+    orderlineid INT,
+    roomnumber INT,
+    checkindatetime TIMESTAMP,
+    checkoutdatetime TIMESTAMP,
+    FOREIGN KEY (orderlineid) REFERENCES Orderlines(orderlineid),
+    FOREIGN KEY (roomnumber) REFERENCES Rooms(roomnumber)
+);
 
-Table "Bookings" {
-  "bookingid" SERIAL [pk, increment]
-  "orderlineid" INT
-  "roomnumber" INT
-  "checkindatetime" TIMESTAMP
-  "checkoutdatetime" TIMESTAMP
-}
+-- Rental Agreements Table
+CREATE TABLE RentalAgreements (
+    agreementid SERIAL PRIMARY KEY,
+    orderlineid INT,
+    carnumber INT,
+    rentalstartdate DATE,
+    rentalenddate DATE,
+    FOREIGN KEY (orderlineid) REFERENCES Orderlines(orderlineid),
+    FOREIGN KEY (carnumber) REFERENCES Cars(carnumber)
+);
 
-Table "RentalAgreements" {
-  "agreementid" SERIAL [pk, increment]
-  "orderlineid" INT
-  "carnumber" INT
-  "rentalstartdate" DATE
-  "rentalenddate" DATE
-}
-
-Table "InsuranceContracts" {
-  "insurancecontractid" SERIAL [pk, increment]
-  "orderlineid" INT
-  "agentid" INT
-  "insuranceamount" DECIMAL(10,2)
-  "premium" DECIMAL(10,2)
-  "signingdate" DATE
-  "expirydate" DATE
-  "cost" DECIMAL(10,2)
-}
-
-Ref:"Countries"."countryid" < "Regions"."countryid"
-
-Ref:"Countries"."countryid" < "Clients"."countryid"
-
-Ref:"Regions"."regionid" < "Clients"."regionid"
-
-Ref:"Clients"."clientid" < "Orders"."clientid"
-
-Ref:"Orders"."orderid" < "Orderlines"."orderid"
-
-Ref:"CarModels"."carmodelid" < "Cars"."carmodelid"
-
-Ref:"Orderlines"."orderlineid" < "Bookings"."orderlineid"
-
-Ref:"Rooms"."roomnumber" < "Bookings"."roomnumber"
-
-Ref:"Orderlines"."orderlineid" < "RentalAgreements"."orderlineid"
-
-Ref:"Cars"."carnumber" < "RentalAgreements"."carnumber"
-
-Ref:"Orderlines"."orderlineid" < "InsuranceContracts"."orderlineid"
-
-Ref:"Agents"."agentid" < "InsuranceContracts"."agentid"
+-- Insurance Contracts Table
+CREATE TABLE InsuranceContracts (
+    insurancecontractid SERIAL PRIMARY KEY,
+    orderlineid INT,
+    agentid INT,
+    insuranceamount DECIMAL(10, 2),
+    premium DECIMAL(10, 2),
+    signingdate DATE,
+    expirydate DATE,
+    cost DECIMAL(10, 2),
+    FOREIGN KEY (orderlineid) REFERENCES Orderlines(orderlineid),
+    FOREIGN KEY (agentid) REFERENCES Agents(agentid)
+);
