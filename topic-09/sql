@@ -1,5 +1,6 @@
 -- Inserting 10 records into Clients table
-INSERT INTO Clients (name, numberofpeople, phone, email, regionid, passportid) VALUES
+INSERT INTO Clients (name, numberofpeople, phone, email, regionid, passportid) 
+  VALUES
 ('John Doe', 2, '555-123-4561', 'john.doe@gmail.com', 1, 1),
 ('Jane Smith', 3, '555-123-4562', 'jane.smith@gmail.com', 2, 2),
 ('Carlos Rivera', 1, '555-123-4563', 'carlos.rivera@hotmail.com', 3, 3),
