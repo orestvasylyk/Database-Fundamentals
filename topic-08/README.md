@@ -1,109 +1,169 @@
 # Subtaks for topic 08. SQL DDL
 
-Create Schema:
-
-```CREATE DATABASE travel_agency;```
-
->    CREATE DATABASE: Creates a new database.
-
-Create Resorts Table:
-
-```
-CREATE TABLE resorts (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  type VARCHAR(50) NOT NULL,
-  quality INTEGER,
-  location VARCHAR(100),
-  price_range DECIMAL (10, 2)
+Countries Table
+```CREATE TABLE Countries (
+    countryid SERIAL PRIMARY KEY,
+    countryname VARCHAR(100) NOT NULL
 );
 ```
->CREATE TABLE: Creates a new table.
->
->SERIAL: Automatically generates unique integer values for each new row inserted into a table.
->
->PRIMARY KEY: Defines the primary key for the table.
-
-
-Create clients Table:
+Regions Table (linked to Countries)
 ```
-CREATE TABLE clients (
-  id SERIAL PRIMARY KEY,
-  first_name VARCHAR(50) NOT NULL,
-  last_name VARCHAR(50) NOT NULL,
-  email VARCHAR(100) UNIQUE NOT NULL,
-  phone_number VARCHAR(20) NOT NULL
+CREATE TABLE Regions (
+    regionid SERIAL PRIMARY KEY,
+    regionname VARCHAR(100) NOT NULL,
+    countryid INT,
+    FOREIGN KEY (countryid) REFERENCES Countries(countryid)
 );
 ```
 
-
-Create agents Table:
+Clients Table (linked to Regions and PassportDetails)
 ```
-CREATE TABLE agents (
-  id SERIAL PRIMARY KEY,
-  first_name VARCHAR(50) NOT NULL,
-  last_name VARCHAR(50) NOT NULL,
-  commission_percentage DECIMAL
+CREATE TABLE Clients (
+    clientid SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    numberofpeople INT NOT NULL,
+    phone VARCHAR(15),
+    email VARCHAR(100) NOT NULL,
+    regionid INT,         -- Foreign key to Regions table
+    passportid INT,       -- Foreign key to PassportDetails table (One-way relationship)
+    FOREIGN KEY (regionid) REFERENCES Regions(regionid),
+    FOREIGN KEY (passportid) REFERENCES PassportDetails(passportid)
 );
 ```
 
-
-Create photos Table:
+PassportDetails Table (No reference back to Clients, one-way relationship)
 ```
-CREATE TABLE photos (
-  id SERIAL PRIMARY KEY,
-  resort_id INTEGER,
-  photo_name VARCHAR(255),
-  photo_file VARCHAR(255),
-  tags TEXT
+CREATE TABLE PassportDetails (
+    passportid SERIAL PRIMARY KEY,
+    series VARCHAR(10) NOT NULL,
+    number VARCHAR(20) NOT NULL,
+    issued_by VARCHAR(100),       -- Issuing authority
+    issued_date DATE              -- Issue date of the passport
 );
 ```
 
-
-Create comments Table:
+Agents Table
 ```
-CREATE TABLE comments (
-  id SERIAL PRIMARY KEY,
-  photo_id INTEGER,
-  client_id INTEGER,
-  comment_text TEXT,
-  comment_date DATE
+CREATE TABLE Agents (
+    agentid SERIAL PRIMARY KEY,
+    fullname VARCHAR(100) NOT NULL,
+    commissionrate DECIMAL(5, 2) NOT NULL
 );
 ```
 
-
-Create contracts Table:
+Rooms Table (Stores details about hotel rooms)
 ```
-CREATE TABLE contracts (
-  id SERIAL PRIMARY KEY,
-  client_id INTEGER,
-  agent_id INTEGER,
-  resort_id INTEGER,
-  contract_date DATE,
-  vacation_period VARCHAR(255)
+CREATE TABLE Rooms (
+    roomnumber INT PRIMARY KEY,
+    numberofbeds INT,
+    roomtype VARCHAR(50),
+    costperday DECIMAL(10, 2)
+);
 ```
 
-
-Add Foreign Key to contracts table:
+Centralized Orders Table (links orders for room bookings, car rentals, insurance)
 ```
-ALTER TABLE "contracts" ADD FOREIGN KEY ("client_id") REFERENCES "clients"("id");
-
-ALTER TABLE "contracts" ADD FOREIGN KEY ("agent_id") REFERENCES "aqents"("id");
-
-ALTER TABLE "contracts" ADD FOREIGN KEY ("resort_id") REFERENCES "resorts"("id");
-```
-
-
-Add Foreign Key to photos table:
-
-`ALTER TABLE "photos" ADD FOREIGN KEY ("resort_id") REFERENCES "resorts"("id");`
-
-
-Add Foreign Key to comments table:
-```
-ALTER TABLE "comments" ADD FOREIGN KEY ("photo_id") REFERENCES "photos"("id");
-ALTER TABLE "comments" ADD FOREIGN KEY ("client_id") REFERENCES "clients"("id");
+CREATE TABLE Orders (
+    orderid SERIAL PRIMARY KEY,
+    clientid INT,
+    orderdate DATE NOT NULL,
+    totalamount DECIMAL(10, 2),
+    orderstatus VARCHAR(50),
+    FOREIGN KEY (clientid) REFERENCES Clients(clientid)
+);
 ```
 
->ALTER TABLE: Used to modify the structure of an existing table in a database.
+Orderlines Table (links orders to rooms, cars, or insurance)
+```
+CREATE TABLE Orderlines (
+    orderlineid SERIAL PRIMARY KEY,
+    orderid INT,
+    itemtype VARCHAR(50),  -- room, car, insurance
+    quantity INT,
+    unitprice DECIMAL(10, 2),
+    subtotal DECIMAL(10, 2),
+    FOREIGN KEY (orderid) REFERENCES Orders(orderid)
+);
+```
 
+Bookings Table (Clients booking rooms, linked to orderlines)
+```
+CREATE TABLE Bookings (
+    bookingid SERIAL PRIMARY KEY,
+    roomnumber INT,
+    checkindatetime TIMESTAMP,
+    checkoutdatetime TIMESTAMP,
+    orderlineid INT, -- Linked to the Orderlines table
+    FOREIGN KEY (roomnumber) REFERENCES Rooms(roomnumber),
+    FOREIGN KEY (orderlineid) REFERENCES Orderlines(orderlineid)
+);
+```
+Room Popularity Table (Stores room ratings or likes)
+```
+CREATE TABLE RoomPopularity (
+    popularityid SERIAL PRIMARY KEY,
+    roomnumber INT,
+    likes INT DEFAULT 0,   -- You can track likes or ratings
+    FOREIGN KEY (roomnumber) REFERENCES Rooms(roomnumber)
+);
+```
+
+CarModels Table (Details about different car models)
+```
+CREATE TABLE CarModels (
+    carmodelid SERIAL PRIMARY KEY,
+    manufacturer VARCHAR(50),
+    brand VARCHAR(50),
+    cartype VARCHAR(50),
+    costperday DECIMAL(10, 2)
+);
+```
+
+Cars Table (Details about the cars available for rent)
+```
+CREATE TABLE Cars (
+    carnumber INT PRIMARY KEY,
+    carmodelid INT,
+    color VARCHAR(50),
+    FOREIGN KEY (carmodelid) REFERENCES CarModels(carmodelid)
+);
+```
+
+Rental Agreements Table (Car rental details, linked to an orderline)
+```
+CREATE TABLE RentalAgreements (
+    agreementid SERIAL PRIMARY KEY,
+    carnumber INT,
+    rentalstartdate DATE,
+    rentalenddate DATE,
+    orderlineid INT, -- Linked to the Orderlines table
+    FOREIGN KEY (carnumber) REFERENCES Cars(carnumber),
+    FOREIGN KEY (orderlineid) REFERENCES Orderlines(orderlineid)
+);
+```
+
+Insurance Contracts Table (Insurance details linked to car rentals and agents)
+```
+CREATE TABLE InsuranceContracts (
+    insurancecontractid SERIAL PRIMARY KEY,
+    orderlineid INT,
+    agentid INT, -- Linked to Agents
+    insuranceamount DECIMAL(10, 2),
+    premium DECIMAL(10, 2),
+    signingdate DATE,
+    expirydate DATE,
+    cost DECIMAL(10, 2),
+    FOREIGN KEY (orderlineid) REFERENCES Orderlines(orderlineid),
+    FOREIGN KEY (agentid) REFERENCES Agents(agentid)
+);
+```
+
+Agent Commissions Table (Now only linked to InsuranceContracts)
+```
+CREATE TABLE AgentCommissions (
+    commissionid SERIAL PRIMARY KEY,
+    insurancecontractid INT, -- Linked to InsuranceContracts (which already links to Agents)
+    commissionamount DECIMAL(10, 2),
+    FOREIGN KEY (insurancecontractid) REFERENCES InsuranceContracts(insurancecontractid)
+);
+```
