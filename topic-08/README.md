@@ -1,7 +1,8 @@
 # Subtaks for topic 08. SQL DDL
 
 Countries Table
-```CREATE TABLE Countries (
+```
+CREATE TABLE Countries (
     countryid SERIAL PRIMARY KEY,
     countryname VARCHAR(100) NOT NULL
 );
