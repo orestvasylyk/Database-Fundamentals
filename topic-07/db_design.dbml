@@ -13,17 +13,31 @@ Table "Clients" {
   "clientid" SERIAL [pk, increment]
   "name" VARCHAR(100) [not null]
   "numberofpeople" INT [not null]
-  "passportdata" VARCHAR(50) [not null]
   "phone" VARCHAR(15)
-  "email" VARCHAR [not null]
-  "countryid" INT
+  "email" VARCHAR(100) [not null]
   "regionid" INT
+  "passportid" INT
+}
+
+Table "PassportDetails" {
+  "passportid" SERIAL [pk, increment]
+  "series" VARCHAR(10) [not null]
+  "number" VARCHAR(20) [not null]
+  "issued_by" VARCHAR(100)
+  "issued_date" DATE
 }
 
 Table "Agents" {
   "agentid" SERIAL [pk, increment]
   "fullname" VARCHAR(100) [not null]
   "commissionrate" DECIMAL(5,2) [not null]
+}
+
+Table "Rooms" {
+  "roomnumber" INT [pk]
+  "numberofbeds" INT
+  "roomtype" VARCHAR(50)
+  "costperday" DECIMAL(10,2)
 }
 
 Table "Orders" {
@@ -43,11 +57,18 @@ Table "Orderlines" {
   "subtotal" DECIMAL(10,2)
 }
 
-Table "Rooms" {
-  "roomnumber" INT [pk]
-  "numberofbeds" INT
-  "roomtype" VARCHAR(50)
-  "costperday" DECIMAL(10,2)
+Table "Bookings" {
+  "bookingid" SERIAL [pk, increment]
+  "roomnumber" INT
+  "checkindatetime" TIMESTAMP
+  "checkoutdatetime" TIMESTAMP
+  "orderlineid" INT
+}
+
+Table "RoomPopularity" {
+  "popularityid" SERIAL [pk, increment]
+  "roomnumber" INT
+  "likes" INT [default: 0]
 }
 
 Table "CarModels" {
@@ -64,20 +85,12 @@ Table "Cars" {
   "color" VARCHAR(50)
 }
 
-Table "Bookings" {
-  "bookingid" SERIAL [pk, increment]
-  "orderlineid" INT
-  "roomnumber" INT
-  "checkindatetime" TIMESTAMP
-  "checkoutdatetime" TIMESTAMP
-}
-
 Table "RentalAgreements" {
   "agreementid" SERIAL [pk, increment]
-  "orderlineid" INT
   "carnumber" INT
   "rentalstartdate" DATE
   "rentalenddate" DATE
+  "orderlineid" INT
 }
 
 Table "InsuranceContracts" {
@@ -91,26 +104,36 @@ Table "InsuranceContracts" {
   "cost" DECIMAL(10,2)
 }
 
+Table "AgentCommissions" {
+  "commissionid" SERIAL [pk, increment]
+  "insurancecontractid" INT
+  "commissionamount" DECIMAL(10,2)
+}
+
 Ref:"Countries"."countryid" < "Regions"."countryid"
 
-Ref:"Countries"."countryid" < "Clients"."countryid"
-
 Ref:"Regions"."regionid" < "Clients"."regionid"
+
+Ref:"PassportDetails"."passportid" < "Clients"."passportid"
 
 Ref:"Clients"."clientid" < "Orders"."clientid"
 
 Ref:"Orders"."orderid" < "Orderlines"."orderid"
 
-Ref:"CarModels"."carmodelid" < "Cars"."carmodelid"
+Ref:"Rooms"."roomnumber" < "Bookings"."roomnumber"
 
 Ref:"Orderlines"."orderlineid" < "Bookings"."orderlineid"
 
-Ref:"Rooms"."roomnumber" < "Bookings"."roomnumber"
+Ref:"Rooms"."roomnumber" < "RoomPopularity"."roomnumber"
 
-Ref:"Orderlines"."orderlineid" < "RentalAgreements"."orderlineid"
+Ref:"CarModels"."carmodelid" < "Cars"."carmodelid"
 
 Ref:"Cars"."carnumber" < "RentalAgreements"."carnumber"
+
+Ref:"Orderlines"."orderlineid" < "RentalAgreements"."orderlineid"
 
 Ref:"Orderlines"."orderlineid" < "InsuranceContracts"."orderlineid"
 
 Ref:"Agents"."agentid" < "InsuranceContracts"."agentid"
+
+Ref:"InsuranceContracts"."insurancecontractid" < "AgentCommissions"."insurancecontractid"
