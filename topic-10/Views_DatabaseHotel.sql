@@ -1,14 +1,14 @@
--- Horizontal View: Select all columns from the Clients table
+-- Horizontal view
 CREATE VIEW ClientFullInfo AS
 SELECT clientid, name, numberofpeople, phone, email, regionid, passportid
 FROM Clients;
 
--- Vertical View: Select a subset of columns from the Clients table
+-- Vertical view
 CREATE VIEW ClientContactInfo AS
 SELECT name, phone, email
 FROM Clients;
 
--- Mixed View: Select columns with calculated fields
+-- Mixed view
 CREATE VIEW ClientSummary AS
 SELECT 
     name, 
@@ -20,7 +20,7 @@ SELECT
     END AS client_type
 FROM Clients;
 
--- View with Joining: Join Clients and Regions tables
+-- View with joining
 CREATE VIEW ClientRegionInfo AS
 SELECT 
     c.clientid, 
@@ -30,7 +30,7 @@ SELECT
 FROM Clients c
 JOIN Regions r ON c.regionid = r.regionid;
 
--- View with Subquery: Retrieve country name for each client based on their region
+-- View with subquery
 CREATE VIEW ClientCountryInfo AS
 SELECT 
     c.clientid, 
@@ -41,7 +41,7 @@ SELECT
      WHERE r.regionid = c.regionid) AS countryname
 FROM Clients c;
 
--- View with Union: Combine Clients from two different regions (e.g., Kyiv and Lviv)
+-- View with union
 CREATE VIEW CombinedClientRegions AS
 SELECT name, phone, regionid
 FROM Clients
@@ -51,12 +51,12 @@ SELECT name, phone, regionid
 FROM Clients
 WHERE regionid = (SELECT regionid FROM Regions WHERE regionname = 'Lviv');
 
--- View on View: Create a new view based on another view (ClientFullInfo)
+-- View on the select from another view
 CREATE VIEW ClientPhoneDirectory AS
 SELECT clientid, name, phone
 FROM ClientFullInfo;
 
--- View with Check Option: Clients from the Kyiv region only
+-- View with check option
 CREATE VIEW KyivClients AS
 SELECT clientid, name, phone, regionid
 FROM Clients
